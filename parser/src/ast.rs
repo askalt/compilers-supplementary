@@ -1,27 +1,66 @@
-/// Represents the set of builtin binary ops.
-pub enum BinaryOp {
+/// Operation that return bool, but maybe
+/// operate with other types.
+///
+/// Examples:
+///  
+/// a == 3
+///   ^
+///  [`LogicalOp`]
+///
+/// a & b
+///   ^
+///  [`LogicalOp`]
+///
+pub enum LogicalOp {
     Eq,
     Gq,
     Lq,
     Gt,
     Lt,
+    And,
+    Xor,
+    Or,
+    Not,
+}
 
+/// Arithmetical operation.
+///
+/// Example:
+///
+/// a + b
+///   ^
+///  [`ArithmOp`]
+///
+pub enum ArithmOp {
     Add,
     Sub,
     Mul,
     Div,
     Mod,
+}
 
-    And,
-    Xor,
-    Or,
-    Not,
-
+/// Operation with bits.
+///
+/// Example:
+///
+/// a >> 3
+///   ^
+/// [`BitOp`]
+///
+pub enum BitOp {
+    Flip,
     Shl,
     Shr,
 }
 
-/// Represents the set of builtin unary op.
+/// Represents the set of binary operations.
+pub enum BinaryOp {
+    LogicalOp(LogicalOp),
+    ArithmOp(ArithmOp),
+    BitOp(BitOp),
+}
+
+/// Represents the set of unary operations.
 pub enum UnaryOp {
     Plus,
     Minus,
@@ -30,10 +69,11 @@ pub enum UnaryOp {
     Not,
 }
 
-/// Represents the set of types.
+/// Represents the set of supported types.
 pub enum Type {
     Int32,
     Unsigned64,
+    Bool,
     Ref(Box<Type>),
 }
 
@@ -67,9 +107,9 @@ pub struct Literal {
 
 /// Represents a value that is used in contexts:
 ///
-/// int x = a     +    3;
-///         ^          ^
-///        value       value
+/// int x = a    +   3;
+///         ^        ^
+///        value    value
 ///
 /// int x = -3;
 ///         ^
@@ -105,53 +145,57 @@ pub enum RValue {
     Value(Value),
 }
 
-//
-// int foo(int ***a) {
-//     int **b = *a,
-//     int *c  = *b;
-//     *c = 3;
-//     return 42;
-// }
-//
-// void assign_3(int *x) {
-//    *x = 3;
-// }
-//
-// int  x    = 3;
-// int* addr = &x;
-// assign_3(&x);
-//
-// int x = 3;
-// return &x;
-//
+/// Represents a `goto` instruction.
+pub struct GotoInsn {
+    /// Label where we go.
+    pub label: String,
+}
 
-/// Represents instruction in 3AC form.
+/// Represents an instruction in 3AC form.
 /// See https://en.wikipedia.org/wiki/Three-address_code
 pub enum Insn {
     /// Variable assignment.
-    Assign(Variable, RValue),
+    Assign { lhs: Variable, rhs: RValue },
     /// Dereference assignment.
-    AssignDeref(Variable, Value),
+    AssignDeref { lhs: Variable, rhs: Value },
     /// Transition.
-    Goto,
-    If,
+    Goto(GotoInsn),
+    /// Condition.
+    ///
+    /// if (a) {
+    ///     goto l1;
+    /// } else {
+    ///     goto l2;
+    /// }
+    ///
+    If {
+        condition: Value,
+        on_true: GotoInsn,
+        on_false: GotoInsn,
+    },
+    /// Return.
     Return(Value),
 }
 
+/// Represents a basic block.
 pub struct BasicBlock {
-    pub name: String,
+    /// Label.
+    pub label: String,
+    /// Instructions.
     pub insns: Vec<Insn>,
 }
 
-pub struct FunctionBody {
+/// Represents a function.
+pub struct Function {
+    /// Return type.
+    pub return_type: Type,
+    /// Arguments.
+    pub args: Vec<Variable>,
+    /// Top level variables declaration.
     pub decl: Vec<Variable>,
+    /// Basic blocks.
     pub blocks: Vec<BasicBlock>,
 }
 
-pub struct Function {
-    pub return_type: Type,
-    pub args: Vec<Variable>,
-    pub body: FunctionBody,
-}
-
+/// Module ast.
 pub type Ast = Vec<Function>;
