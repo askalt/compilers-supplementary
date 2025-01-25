@@ -1,0 +1,38 @@
+
+int bit_scan_reverse(unsigned n) {
+  int ip1, idx, ns, na, bitsize, retval, i;
+
+BB1:
+  bitsize = 64;
+  retval = bitsize;
+  i = 0;
+  if (i >= bitsize)
+    goto BB5;
+  else
+    goto BB2;
+BB2:
+  ip1 = i + 1;
+  idx = bitsize - ip1;
+  ns = ns >> idx;
+  na = ns & 1;
+  if (ns == 1)
+    goto BB4;
+  else
+    goto BB3;
+
+BB3:
+  i = i + 1;
+  if (i < bitsize)
+    goto BB2;
+  else
+    goto BB5;
+
+BB4:
+  retval = idx;
+  goto BB5;
+
+BB5:
+  return retval;
+}
+
+int main() { return bit_scan_reverse(42); }
