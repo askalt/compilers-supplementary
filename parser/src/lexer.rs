@@ -25,6 +25,7 @@ impl Keyword {
             "int" => Some(Self::Int),
             "unsigned" => Some(Self::Unsigned),
             "void" => Some(Self::Void),
+            "bool" => Some(Self::Bool),
             "goto" => Some(Self::Goto),
             "return" => Some(Self::Return),
             _ => None,

@@ -253,6 +253,16 @@ pub enum Insn {
     Return(Value),
     /// Function call.
     Call(Call),
+    #[display("{} {}{}", typ, lhs,
+        rhs.as_ref().map(
+            |rhs| format!(" = {}", rhs)
+        ).unwrap_or("".to_owned())
+    )]
+    Declaration {
+        typ: Type,
+        lhs: Variable,
+        rhs: Option<RValue>,
+    },
 }
 
 impl Insn {
@@ -279,20 +289,11 @@ pub struct BasicBlock {
 
 /// Represents a function.
 #[derive(Debug, Display)]
-#[display("{} {}({}) {{\n{}{}\n}}\n",
+#[display("{} {}({}) {{\n{}\n}}\n",
     return_type, name,
     args.iter().map(
         |(typ, name)| format!("{} {}", typ, name,
     )).collect::<Vec<_>>().join(","),
-    if decl.is_empty() {
-        "".to_owned()
-    }
-    else {
-        decl.iter().map(
-            |(typ, name)| format!("{}{} {}", INDENT, typ, name,
-        )).collect::<Vec<_>>().join(";\n")
-        + ";\n"
-    },
     blocks.iter().map(|b| format!("{}", b)).collect::<Vec<_>>().join("\n\n")
 )]
 pub struct Function {
@@ -302,8 +303,6 @@ pub struct Function {
     pub name: String,
     /// Arguments.
     pub args: Vec<(Type, Variable)>,
-    /// Top level variables declaration.
-    pub decl: Vec<(Type, Variable)>,
     /// Basic blocks.
     pub blocks: Vec<BasicBlock>,
 }

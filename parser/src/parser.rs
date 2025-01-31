@@ -118,13 +118,6 @@ fn literal(i: &[Token]) -> IResult<&[Token], Token> {
     })(i)
 }
 
-/// Parse a variable declaration.
-fn decl_var(i: &[Token]) -> IResult<&[Token], (Type, String)> {
-    map(pair(typ, ident), |(typ, ident)| {
-        (typ, ident.into_ident().unwrap())
-    })(i)
-}
-
 /// Parse a function signature.
 fn signature(i: &[Token]) -> IResult<&[Token], (Type, String, Vec<(Type, Variable)>)> {
     map(
@@ -133,7 +126,7 @@ fn signature(i: &[Token]) -> IResult<&[Token], (Type, String, Vec<(Type, Variabl
             typ,
             ident,
             tok(LPar),
-            separated_list0(tok(Comma), decl_var),
+            separated_list0(tok(Comma), pair(typ, ident)),
             tok(RPar),
         )),
         |(return_type, name, _, decl, _)| {
@@ -141,7 +134,14 @@ fn signature(i: &[Token]) -> IResult<&[Token], (Type, String, Vec<(Type, Variabl
                 return_type,
                 name.into_ident().unwrap(),
                 decl.into_iter()
-                    .map(|(typ, name)| (typ, Variable { name }))
+                    .map(|(typ, name)| {
+                        (
+                            typ,
+                            Variable {
+                                name: name.into_ident().unwrap(),
+                            },
+                        )
+                    })
                     .collect(),
             )
         },
@@ -331,9 +331,21 @@ fn iff(i: &[Token]) -> IResult<&[Token], Insn> {
     )(i)
 }
 
+/// Parse a variable declaration.
+fn declaration(i: &[Token]) -> IResult<&[Token], Insn> {
+    map(
+        tuple((typ, variable, maybe(pair(tok(Token::Assign), rvalue)))),
+        |(typ, lhs, rhs)| Insn::Declaration {
+            typ: typ,
+            lhs,
+            rhs: rhs.map(|rhs| rhs.1),
+        },
+    )(i)
+}
+
 /// Parse a instruction.
 fn insn(i: &[Token]) -> IResult<&[Token], Insn> {
-    alt((ret, assign, assign_deref, goto, iff))(i)
+    alt((ret, assign, assign_deref, goto, iff, declaration))(i)
 }
 
 /// Parse a basic block.
@@ -353,40 +365,18 @@ fn basic_block(i: &[Token]) -> IResult<&[Token], BasicBlock> {
 }
 
 /// Parse a function body.
-fn body(i: &[Token]) -> IResult<&[Token], (Vec<(Type, Variable)>, Vec<BasicBlock>)> {
-    map(
-        tuple((
-            maybe(pair(
-                separated_list0(
-                    tok(Token::Semicolon),
-                    pair(typ, separated_list0(tok(Token::Comma), variable)),
-                ),
-                tok(Token::Semicolon),
-            )),
-            many0(basic_block),
-        )),
-        |(decl, blocks)| {
-            let vars = decl
-                .map(|d| d.0)
-                .unwrap_or_default()
-                .into_iter()
-                .flat_map(|(typ, vars)| vars.into_iter().map(move |var| (typ.clone(), var)))
-                .collect();
-
-            (vars, blocks)
-        },
-    )(i)
+fn body(i: &[Token]) -> IResult<&[Token], Vec<BasicBlock>> {
+    map(many0(basic_block), |blocks| blocks)(i)
 }
 
 /// Parse a function definition.
 fn function(i: &[Token]) -> IResult<&[Token], Function> {
     map(
         tuple((signature, tok(LCb), body, tok(RCb))),
-        |((return_type, name, args), _, (decl, blocks), _)| Function {
+        |((return_type, name, args), _, blocks, _)| Function {
             return_type,
             args,
             name,
-            decl,
             blocks,
         },
     )(i)
