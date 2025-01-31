@@ -1,0 +1,6 @@
+int foo(int a) {
+   *int b;
+BB1:
+   b = &a;
+   return b;
+}
