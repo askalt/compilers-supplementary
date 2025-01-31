@@ -1,6 +1,6 @@
-int foo(int a) {
-   *int b;
+*int foo(int a) {
 BB1:
+   *int b;
    b = &a;
    return b;
 }
