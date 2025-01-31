@@ -1,13 +1,11 @@
 
 int abs(int a) {
-    int c, d;
-
 BB1:
-    c = a > 0;
+    bool c = a > 0;
     if (c) goto BB2;
     return a;
 
 BB2:
-    d = -a;
+    int d = -a;
     return d;
 }
