@@ -12,6 +12,7 @@ pub enum Keyword {
     Int,      // `int`
     Unsigned, // `unsigned`
     Void,     // `void`
+    Bool,     // `bool `
     Goto,     // `goto`
     Return,   // `return`
 }
@@ -34,9 +35,12 @@ impl Keyword {
 /// Represents the set of recognizable tokens.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
-    Eq, // '=='
-    Gq, // '>='
-    Lq, // '<='
+    Eq,    // '=='
+    Gq,    // '>='
+    Lq,    // '<='
+    Shl,   // `>>`
+    Shr,   // `<<`,
+    Tilda, // `~`
 
     LPar, // `(`
     RPar, // `)`
@@ -68,6 +72,15 @@ pub enum Token {
     Number(u64),
 }
 
+impl Token {
+    pub fn into_ident(self) -> Option<String> {
+        match self {
+            Self::Ident(n) => Some(n),
+            _ => None,
+        }
+    }
+}
+
 /// Make a new ident.
 fn ident<T: Into<String>>(s: T) -> Token {
     Token::Ident(s.into())
@@ -89,7 +102,7 @@ lazy_static! {
         // Non-primitive tokens.
         let mut regexs: Vec<(&'static str, fn(&str) -> Result<Token>)> = vec![
             (r"[+-]?[0-9]+", |a| parse_number(a).map(Token::Number)),
-            (r"[a-zA-Z][a-zA-Z0-9]*", |a: &str| {
+            (r"[a-zA-Z_][a-zA-Z0-9_]*", |a: &str| {
                 Ok(
                     // Firstly try to extract keyword, then make an ident.
                     Keyword::from_str(&a)
@@ -103,6 +116,9 @@ lazy_static! {
             (r"==", Token::Eq),
             (r">=", Token::Gq),
             (r"<=", Token::Lq),
+            (r"<<", Token::Shl),
+            (r">>", Token::Shr),
+            (r"~", Token::Tilda),
             (r"\(", Token::LPar),
             (r"\)", Token::RPar),
             (r"\[", Token::LSq),
@@ -189,11 +205,11 @@ impl<'a> Lexer<'a> {
                                 return cons(matched.as_str()).map(Some);
                             }
                         }
-                        // If there are matching then some group is matched.
+                        // If there is matching then some group is matched.
                         unreachable!()
                     })
                 }
-                None => Err(Error::Unexepected(self.input.to_owned())),
+                None => Err(Error::UnexepectedTokens(self.input.to_owned())),
             }
         }
     }
