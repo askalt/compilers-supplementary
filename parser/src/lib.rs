@@ -4,6 +4,4 @@ mod lexer;
 mod parser;
 
 pub use error::{Error, Result};
-
-#[cfg(test)]
-mod tests {}
+pub use parser::Parser;

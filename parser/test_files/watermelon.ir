@@ -1,0 +1,11 @@
+
+int watermelon(int n) {
+    int ans, odd, even;
+
+BB1:
+    odd  = n % 2;
+    even = !odd;
+    ans  = n > 2;
+    ans  = ans & even;
+    return ans;
+}
