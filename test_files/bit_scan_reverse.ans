@@ -27,9 +27,9 @@ BB5:
    return retval;
 }
 
-
 int main() {
 BB1:
    int ret = bit_scan_reverse(42);
    return ret;
 }
+
