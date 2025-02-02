@@ -6,3 +6,4 @@ BB1:
    ans = ans & even;
    return ans;
 }
+
