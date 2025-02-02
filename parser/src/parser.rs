@@ -230,7 +230,7 @@ fn unary_op(i: &[Token]) -> IResult<&[Token], (UnaryOp, Value)> {
                 Token::Not => UnaryOp::Not,
                 Token::Star => UnaryOp::Deref,
                 Token::And => UnaryOp::Ref,
-                Token::Tilda => UnaryOp::Not,
+                Token::Tilda => UnaryOp::Neg,
                 _ => unreachable!(),
             },
         )(i)
