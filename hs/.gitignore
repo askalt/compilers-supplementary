@@ -1,0 +1,10 @@
+# Cabal build directory
+dist-newstyle
+.ghc-history
+.ghci
+
+# Haskell IDE files
+*.hi
+*.o
+*.dyn_o
+*.dyn_hi
