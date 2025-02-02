@@ -1,0 +1,40 @@
+
+int set_bit(int *m, int i, int val) {
+ENTER:
+    int arg = 1 << i;
+    int mask = *m;
+    int bit = mask >> i;
+    bit = bit & 1;
+    bool c = bit == 1;
+    if (c) goto SET0; else goto SET1;
+
+SET0:
+    mask = mask ^ arg;
+    goto RET;
+
+SET1:
+    mask = mask | arg;
+    goto RET;
+
+RET:
+    *m = mask;
+    return bit;
+}
+
+int negate(int a) {
+ENTER:
+    int b = ~a;
+    return b;
+}
+
+int main() {
+BB1:
+    int a = 7;
+    int addr_a = &a;
+    int _ = set_bit(addr_a, 1, 0);
+
+    int v = 13;
+    int d = negate(v);
+    int ret = d + a;
+    return ret;
+}
