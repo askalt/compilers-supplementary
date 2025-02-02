@@ -70,7 +70,7 @@ pub enum Token {
 
     Keyword(Keyword),
     Ident(String), // [a-zA-Z][a-zA-Z0-9]*
-    Number(u64),
+    Number(i64),
 }
 
 impl Token {
@@ -102,7 +102,7 @@ lazy_static! {
     static ref TOKEN_REGEXS: Vec<(&'static str, fn(&str) -> Result<Token>)> = {
         // Non-primitive tokens.
         let mut regexs: Vec<(&'static str, fn(&str) -> Result<Token>)> = vec![
-            (r"[+-]?[0-9]+", |a| parse_number(a).map(Token::Number)),
+            (r"[0-9]+", |a| parse_number(a).map(Token::Number)),
             (r"[a-zA-Z_][a-zA-Z0-9_]*", |a: &str| {
                 Ok(
                     // Firstly try to extract keyword, then make an ident.
@@ -154,7 +154,7 @@ pub struct Lexer<'a> {
     cons: HashMap<usize, &'static fn(&str) -> Result<Token>>,
 }
 
-fn parse_number(s: &str) -> Result<u64> {
+fn parse_number(s: &str) -> Result<i64> {
     s.parse().map_err(Error::ParseIntError)
 }
 
