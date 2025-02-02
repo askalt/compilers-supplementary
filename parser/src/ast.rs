@@ -105,6 +105,8 @@ pub enum UnaryOp {
     Ref,
     #[display("!")]
     Not,
+    #[display("~")]
+    Neg,
 }
 
 /// Represents the set of supported types.
