@@ -1,4 +1,4 @@
-int set_bit(*int m,int i,int val) {
+int set_bit(int* m,int i,int val) {
 ENTER:
    int arg = 1 << i;
    int mask = *m;
@@ -20,13 +20,11 @@ RET:
    return bit;
 }
 
-
 int negate(int a) {
 ENTER:
    int b = ~a;
    return b;
 }
-
 
 int main() {
 BB1:
@@ -38,3 +36,4 @@ BB1:
    int ret = d + a;
    return ret;
 }
+

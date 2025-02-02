@@ -45,8 +45,8 @@ fn one_of<'a>(tokens: &'a [Token]) -> impl Fn(&'a [Token]) -> IResult<&'a [Token
     }
 }
 
-/// Combinator that wraps the result of the other combinator with option if
-/// it return an recoverable error.
+/// Combinator that wraps the result of the other combinator with option,
+/// returning [`None`] if it return an recoverable error.
 fn maybe<I: Clone, O, E: ParseError<I>, F>(
     mut parser: F,
 ) -> impl FnMut(I) -> IResult<I, Option<O>, E>
@@ -112,10 +112,18 @@ fn ident(i: &[Token]) -> IResult<&[Token], Token> {
 
 /// Parse a literal.
 fn literal(i: &[Token]) -> IResult<&[Token], Token> {
-    map_res(take1, |token| match token {
-        Token::Number(_) => Ok(token),
-        _ => Err(nom_error(i, ErrorKind::Tag)),
-    })(i)
+    map_res(
+        pair(maybe(one_of(&[Token::Plus, Token::Minus])), take1),
+        |(sign, token)| match token {
+            Token::Number(n) => match sign {
+                Some(Token::Plus) | None => Ok(Token::Number(n)),
+                // TODO: overflow.
+                Some(Token::Minus) => Ok(Token::Number(-n)),
+                _ => unreachable!(),
+            },
+            _ => Err(nom_error(i, ErrorKind::Tag)),
+        },
+    )(i)
 }
 
 /// Parse a function signature.
@@ -433,7 +441,9 @@ mod tests {
     const TEST_FILES_DIR_NAME: &str = "test_files";
 
     fn get_test_files_dir() -> PathBuf {
-        PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join(TEST_FILES_DIR_NAME)
+        PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
+            .join("..")
+            .join(TEST_FILES_DIR_NAME)
     }
 
     fn read_file(path: &PathBuf) -> Result<String> {
