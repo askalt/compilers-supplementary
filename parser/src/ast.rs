@@ -120,7 +120,7 @@ pub enum Type {
     Bool,
     #[display("void")]
     Void,
-    #[display("*{}", _0)]
+    #[display("{}*", _0)]
     Ref(Box<Type>),
 }
 
@@ -291,7 +291,7 @@ pub struct BasicBlock {
 
 /// Represents a function.
 #[derive(Debug, Display)]
-#[display("{} {}({}) {{\n{}\n}}\n",
+#[display("{} {}({}) {{\n{}\n}}",
     return_type, name,
     args.iter().map(
         |(typ, name)| format!("{} {}", typ, name,
@@ -312,7 +312,7 @@ pub struct Function {
 /// Module ast.
 ///
 #[derive(Display)]
-#[display("{}", funs.iter().map(|f| format!("{}", f)).collect::<Vec<_>>().join("\n\n") )]
+#[display("{}\n\n", funs.iter().map(|f| format!("{}", f)).collect::<Vec<_>>().join("\n\n") )]
 pub struct Ast {
     pub funs: Vec<Function>,
 }
