@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use std::{collections::HashMap, fmt::Write};
 
 use lazy_static::lazy_static;
@@ -83,6 +85,7 @@ impl Token {
 }
 
 /// Make a new ident.
+#[allow(dead_code)]
 fn ident<T: Into<String>>(s: T) -> Token {
     Token::Ident(s.into())
 }
@@ -105,7 +108,7 @@ lazy_static! {
             (r"[a-zA-Z_][a-zA-Z0-9_]*", |a: &str| {
                 Ok(
                     // Firstly try to extract keyword, then make an ident.
-                    Keyword::from_str(&a)
+                    Keyword::from_str(a)
                     .map(Token::Keyword)
                     .unwrap_or_else(|| Token::Ident(a.to_owned()) )
                 )
@@ -190,7 +193,7 @@ impl<'a> Lexer<'a> {
             // EOF.
             Ok(None)
         } else {
-            match self.regexp.captures(&self.input) {
+            match self.regexp.captures(self.input) {
                 Some(matched) => {
                     // Shift input.
                     // The whole match (0-group) always starts from the beginning.

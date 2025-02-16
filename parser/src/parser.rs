@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use nom::{
     branch::alt,
     combinator::{map, map_res},
@@ -10,7 +12,7 @@ use nom::{
 use crate::{
     ast::{
         ArithmBinaryOp, Ast, BasicBlock, BinaryOp, BitBinaryOp, Call, Function, GotoInsn, Insn,
-        Literal, LogicalBinarylOp, RValue, Type, UnaryOp, Value, Variable,
+        Literal, LogicalBinaryOp, RValue, Type, UnaryOp, Value, Variable,
     },
     lexer::{
         Keyword, Lexer,
@@ -201,14 +203,14 @@ fn binary_op(i: &[Token]) -> IResult<&[Token], (Value, BinaryOp, Value)> {
                 Token::Percent => BinaryOp::ArithmOp(ArithmBinaryOp::Mod),
 
                 // Logical.
-                Token::Gt => BinaryOp::LogicalOp(LogicalBinarylOp::Gt),
-                Token::Lt => BinaryOp::LogicalOp(LogicalBinarylOp::Lt),
-                Token::And => BinaryOp::LogicalOp(LogicalBinarylOp::And),
-                Token::Xor => BinaryOp::LogicalOp(LogicalBinarylOp::Xor),
-                Token::Or => BinaryOp::LogicalOp(LogicalBinarylOp::Or),
-                Token::Eq => BinaryOp::LogicalOp(LogicalBinarylOp::Eq),
-                Token::Gq => BinaryOp::LogicalOp(LogicalBinarylOp::Gq),
-                Token::Lq => BinaryOp::LogicalOp(LogicalBinarylOp::Lq),
+                Token::Gt => BinaryOp::LogicalOp(LogicalBinaryOp::Gt),
+                Token::Lt => BinaryOp::LogicalOp(LogicalBinaryOp::Lt),
+                Token::And => BinaryOp::LogicalOp(LogicalBinaryOp::And),
+                Token::Xor => BinaryOp::LogicalOp(LogicalBinaryOp::Xor),
+                Token::Or => BinaryOp::LogicalOp(LogicalBinaryOp::Or),
+                Token::Eq => BinaryOp::LogicalOp(LogicalBinaryOp::Eq),
+                Token::Gq => BinaryOp::LogicalOp(LogicalBinaryOp::Gq),
+                Token::Lq => BinaryOp::LogicalOp(LogicalBinaryOp::Lq),
 
                 Token::Shl => BinaryOp::BitOp(BitBinaryOp::Shl),
                 Token::Shr => BinaryOp::BitOp(BitBinaryOp::Shr),
@@ -283,7 +285,7 @@ fn rvalue(i: &[Token]) -> IResult<&[Token], RValue> {
 fn value(i: &[Token]) -> IResult<&[Token], Value> {
     map(alt((ident, literal)), |token| match token {
         Token::Ident(n) => Value::Variable(Variable { name: n }),
-        Token::Number(n) => Value::Literal(Literal { val: n as i64 }),
+        Token::Number(n) => Value::Literal(Literal { val: n }),
         _ => unreachable!(),
     })(i)
 }
@@ -344,7 +346,7 @@ fn declaration(i: &[Token]) -> IResult<&[Token], Insn> {
     map(
         tuple((typ, variable, maybe(pair(tok(Token::Assign), rvalue)))),
         |(typ, lhs, rhs)| Insn::Declaration {
-            typ: typ,
+            typ,
             lhs,
             rhs: rhs.map(|rhs| rhs.1),
         },
@@ -399,7 +401,7 @@ fn run_parser<'a, O, E: std::fmt::Debug>(
     mut parser: impl nom::Parser<&'a [Token], O, E>,
     tokens: &'a [Token],
 ) -> Result<O> {
-    let (rest, o) = parser.parse(&tokens).expect("no unrecover errors");
+    let (rest, o) = parser.parse(tokens).expect("no unrecover errors");
     if rest.is_empty() {
         Ok(o)
     } else {

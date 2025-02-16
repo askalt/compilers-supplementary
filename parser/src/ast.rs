@@ -21,7 +21,7 @@ const INDENT: &str = "   ";
 /// """
 ///
 #[derive(Debug, Display)]
-pub enum LogicalBinarylOp {
+pub enum LogicalBinaryOp {
     #[display("==")]
     Eq,
     #[display(">=")]
@@ -86,8 +86,9 @@ pub enum BitBinaryOp {
 
 /// Represents the set of binary operations.
 #[derive(Debug, Display)]
+#[allow(clippy::enum_variant_names)]
 pub enum BinaryOp {
-    LogicalOp(LogicalBinarylOp),
+    LogicalOp(LogicalBinaryOp),
     ArithmOp(ArithmBinaryOp),
     BitOp(BitBinaryOp),
 }
