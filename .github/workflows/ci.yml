@@ -1,11 +1,12 @@
-name: Rust CI
+name: compilers-supplementary-CI
 
 on:
   push:
   pull_request:
 
 jobs:
-  test:
+  # A common job to check if a particular should run.
+  check_event:
     # We want to run on external PRs, but not on our own internal
     # PRs as they'll be run by the push to the branch.
     #
@@ -15,17 +16,99 @@ jobs:
     # Also we want to run it always for manually triggered workflows.
     if: (github.event_name == 'push') ||
       (github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name != github.repository) ||
+      github.event.pull_request.head.repo.full_name != github.repository) ||
       (github.event_name == 'workflow_dispatch')
-
     runs-on: ubuntu-22.04
+    steps:
+      - name: Fake step
+        run: echo Done
 
+  lint-rust:
+    needs: check_event
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Rust
+      - name: Set up rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo fmt
+        run: make cargo_fmt
+
+      - name: cargo clippy
+        run: make clippy
+
+  tests-rust:
+    needs: check_event
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
       - name: Run tests
-        run: cargo test --all
+        run: make cargo_test
+
+  # We run haskell tests only if there are changes in the haskell directory.
+  check_haskell_changes:
+    runs-on: ubuntu-22.04
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      # If it is a PR, we compare with a target branch.
+      - name: Check on pull request
+        if: github.event_name == 'pull_request'
+        run: echo "TARGET_REF=${{ github.base_ref }}" >> $GITHUB_ENV
+
+      # It is a push, we always compare with a main branch.
+      - name: Check on push
+        if: github.event_name == 'push'
+        run: |
+          MAIN_BRANCH=${{ github.event.repository.default_branch }}
+          echo "TARGET_REF=$MAIN_BRANCH" >> $GITHUB_ENV
+
+      - name: Checkout branch to compare
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_REF }}
+
+      - name: Fetch our branch
+        run:
+          git fetch origin ${{ github.sha }} && git checkout ${{ github.sha }}
+
+      - name: Compare
+        id: compare
+        run: |
+          set +e
+          ./ci/scripts/checkdiff.sh
+          if [ $? -eq 1 ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          SRC:  ${{ github.sha }}
+          DST:  ${{ env.TARGET_REF }}
+          DIFF: "^hs/"
+          OUT:  $GITHUB_OTPUT
+
+  tests-haskell:
+      needs: check_haskell_changes
+      if:
+        ${{ needs.check_haskell_changes.outputs.changed == 'true' }}
+      runs-on: ubuntu-22.04
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Setup haskell toolchain
+          uses: haskell-actions/setup@v2
+          with:
+            ghc-version: '9.4.8'
+            cabal-version: '3.12.1.0'
+
+        - name: Run tests
+          run: make hs_test
