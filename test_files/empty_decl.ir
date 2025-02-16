@@ -1,0 +1,5 @@
+int const() {
+BB1:
+   return 42;
+}
+

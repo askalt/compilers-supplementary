@@ -1,0 +1,11 @@
+int abs(int a) {
+BB1:
+   bool c = a > 0;
+   if (c) goto BB2;
+   return a;
+
+BB2:
+   int d = -a;
+   return d;
+}
+
