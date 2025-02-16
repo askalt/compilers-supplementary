@@ -98,7 +98,6 @@ macro_rules! primitive_tokens {
 }
 
 lazy_static! {
-    // Regexes are matched greedily from the first to the last.
     static ref TOKEN_REGEXS: Vec<(&'static str, fn(&str) -> Result<Token>)> = {
         // Non-primitive tokens.
         let mut regexs: Vec<(&'static str, fn(&str) -> Result<Token>)> = vec![
